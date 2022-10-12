@@ -1,0 +1,10 @@
+[submodule "base"]
+	path = base
+	url = https://github.com/panguclick/base.git
+
+[submodule "third_party"]
+	path = third_party
+	url = https://github.com/panguclick/third_party.git
+
+
+
