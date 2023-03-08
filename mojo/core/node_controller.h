@@ -1,4 +1,4 @@
-// Copyright 2016 The Chromium Authors. All rights reserved.
+// Copyright 2016 The Chromium Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -20,7 +20,7 @@
 #include "base/memory/writable_shared_memory_region.h"
 #include "base/process/process.h"
 #include "base/task/single_thread_task_runner.h"
-#include "base/build_config.h"
+#include "build/build_config.h"
 #include "mojo/core/atomic_flag.h"
 #include "mojo/core/node_channel.h"
 #include "mojo/core/ports/event.h"

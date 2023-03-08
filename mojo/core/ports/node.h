@@ -1,4 +1,4 @@
-// Copyright 2016 The Chromium Authors. All rights reserved.
+// Copyright 2016 The Chromium Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -218,8 +218,8 @@ class COMPONENT_EXPORT(MOJO_CORE_PORTS) Node {
     void EnsureSafeDelegateAccess() const {}
 #endif
 
-    const raw_ptr<Node> node_;
-    const raw_ptr<NodeDelegate> delegate_;
+    const raw_ptr<Node, DanglingUntriaged> node_;
+    const raw_ptr<NodeDelegate, DanglingUntriaged> delegate_;
   };
 
   int OnUserMessage(const PortRef& port_ref,

@@ -1,4 +1,4 @@
-// Copyright 2016 The Chromium Authors. All rights reserved.
+// Copyright 2016 The Chromium Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -22,7 +22,6 @@ use crate::util::mojom_validation::*;
 ///   1. Decode the header of the validation input.
 ///   2. Decode the payload of the validation input, expecting a validation
 ///      error.
-///
 macro_rules! validation_tests {
     ($($name:ident => $req_type:ident;)*) => {
         tests! {

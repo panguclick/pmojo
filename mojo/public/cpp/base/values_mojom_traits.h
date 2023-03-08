@@ -1,4 +1,4 @@
-// Copyright 2018 The Chromium Authors. All rights reserved.
+// Copyright 2018 The Chromium Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -102,18 +102,6 @@ struct COMPONENT_EXPORT(MOJO_BASE_SHARED_TRAITS)
   }
 
   static bool Read(mojo_base::mojom::DeprecatedDictionaryValueDataView data,
-                   base::Value* value);
-};
-
-template <>
-struct COMPONENT_EXPORT(MOJO_BASE_SHARED_TRAITS)
-    StructTraits<mojo_base::mojom::DeprecatedListValueDataView, base::Value> {
-  static base::span<const base::Value> storage(const base::Value& value) {
-    DCHECK(value.is_list());
-    return value.GetListDeprecated();
-  }
-
-  static bool Read(mojo_base::mojom::DeprecatedListValueDataView data,
                    base::Value* value);
 };
 

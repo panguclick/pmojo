@@ -1,4 +1,4 @@
-// Copyright 2016 The Chromium Authors. All rights reserved.
+// Copyright 2016 The Chromium Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -9,8 +9,9 @@
 #include "base/logging.h"
 #include "base/memory/platform_shared_memory_region.h"
 #include "base/memory/ref_counted.h"
-#include "base/threading/thread_task_runner_handle.h"
-#include "base/build_config.h"
+#include "base/ranges/algorithm.h"
+#include "base/task/single_thread_task_runner.h"
+#include "build/build_config.h"
 #include "mojo/core/broker_messages.h"
 #include "mojo/core/platform_handle_utils.h"
 
@@ -44,7 +45,7 @@ BrokerHost::BrokerHost(base::Process client_process,
                                      .IsValid()
                                  ? Channel::HandlePolicy::kAcceptHandles
                                  : Channel::HandlePolicy::kRejectHandles,
-                             base::ThreadTaskRunnerHandle::Get());
+                             base::SingleThreadTaskRunner::GetCurrentDefault());
   channel_->Start();
 }
 
@@ -107,7 +108,7 @@ void BrokerHost::SendNamedChannel(base::WStringPiece pipe_name) {
       BrokerMessageType::INIT, 0, sizeof(*name_data) * pipe_name.length(),
       &data, reinterpret_cast<void**>(&name_data));
   data->pipe_name_length = static_cast<uint32_t>(pipe_name.length());
-  std::copy(pipe_name.begin(), pipe_name.end(), name_data);
+  base::ranges::copy(pipe_name, name_data);
   channel_->Write(std::move(message));
 }
 

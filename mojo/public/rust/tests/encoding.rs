@@ -1,4 +1,4 @@
-// Copyright 2016 The Chromium Authors. All rights reserved.
+// Copyright 2016 The Chromium Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -33,10 +33,10 @@ use crate::util::mojom_validation::*;
 ///   6. Decode this re-encoded payload.
 ///   7. Verify the re-decoded payload is what we expect.
 ///
-/// Each test should sufficiently verify the operation of the encoding and decoding
-/// frameworks as we first verify the decoder works correctly on the "golden files",
-/// then verify that the encoder works by encoding the decoded output, and decoding
-/// that once again.
+/// Each test should sufficiently verify the operation of the encoding and
+/// decoding frameworks as we first verify the decoder works correctly on the
+/// "golden files", then verify that the encoder works by encoding the decoded
+/// output, and decoding that once again.
 macro_rules! encoding_tests {
     ($($name:ident { MessageHeader => $header_cls:expr, $req_type:ident => $cls:expr } )*) => {
         tests! {

@@ -1,11 +1,10 @@
-# Copyright 2019 The Chromium Authors. All rights reserved.
+# Copyright 2019 The Chromium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
 assert(is_fuchsia)
 
 import("//mojo/public/tools/bindings/mojom.gni")
-import("//testing/test.gni")
 
 mojom("example_interfaces") {
   testonly = true
@@ -43,14 +42,14 @@ source_set("traits") {
 
   visibility = [
     ":*",
-    "//fuchsia/engine/mojom:*",
+    "//fuchsia_web/webengine/mojom:*",
     "//media/fuchsia/mojom:*",
   ]
 }
 
-# TODO(crbug/1081525): Consider merging into //mojo:mojo_unittests, possibly
-# via ../:tests.
-test("fuchsia_mojo_unittests") {
+source_set("unittests") {
+  testonly = true
+
   sources = [
     "fidl_interface_request_mojom_traits_unittest.cc",
     "test_interface_request_mojom_traits.h",
@@ -64,6 +63,4 @@ test("fuchsia_mojo_unittests") {
     "//mojo/public/cpp/test_support:test_utils",
     "//testing/gtest",
   ]
-
-  visibility = []
 }

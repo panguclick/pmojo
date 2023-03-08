@@ -1,4 +1,4 @@
-// Copyright 2014 The Chromium Authors. All rights reserved.
+// Copyright 2014 The Chromium Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -8,10 +8,9 @@ import android.os.ParcelFileDescriptor;
 
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
-import org.chromium.base.annotations.MainDex;
 import org.chromium.base.annotations.NativeMethods;
+import org.chromium.build.annotations.MainDex;
 import org.chromium.mojo.system.Core;
-import org.chromium.mojo.system.Core.HandleSignalsState;
 import org.chromium.mojo.system.DataPipe;
 import org.chromium.mojo.system.DataPipe.ConsumerHandle;
 import org.chromium.mojo.system.DataPipe.ProducerHandle;
@@ -240,7 +239,9 @@ public class CoreImpl implements Core {
         if (handles != null && !handles.isEmpty()) {
             handlesBuffer = allocateDirectBuffer(handles.size() * HANDLE_SIZE);
             for (Handle handle : handles) {
-                handlesBuffer.putLong(getMojoHandle(handle));
+                // NOTE: Handles are closed by native code regardless of whether writeMessage()
+                // succeeds below, so we unconditionally release them here.
+                handlesBuffer.putLong(handle.releaseNativeHandle());
             }
             handlesBuffer.position(0);
         }
@@ -248,14 +249,6 @@ public class CoreImpl implements Core {
                 bytes, bytes == null ? 0 : bytes.limit(), handlesBuffer, flags.getFlags());
         if (mojoResult != MojoResult.OK) {
             throw new MojoException(mojoResult);
-        }
-        // Success means the handles have been invalidated.
-        if (handles != null) {
-            for (Handle handle : handles) {
-                if (handle.isValid()) {
-                    ((HandleBase) handle).invalidateHandle();
-                }
-            }
         }
     }
 

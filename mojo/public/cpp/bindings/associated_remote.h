@@ -1,4 +1,4 @@
-// Copyright 2019 The Chromium Authors. All rights reserved.
+// Copyright 2019 The Chromium Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -50,8 +50,8 @@ class AssociatedRemote {
 
   // Constructs a new AssociatedRemote which is bound from |pending_remote| and
   // which schedules response callbacks and disconnection notifications on the
-  // default SequencedTaskRunner (i.e., base::SequencedTaskRunnerHandle::Get()
-  // at construction time).
+  // default SequencedTaskRunner (i.e.,
+  // base::SequencedTaskRunner::GetCurrentDefault() at construction time).
   explicit AssociatedRemote(PendingAssociatedRemote<Interface> pending_remote)
       : AssociatedRemote(std::move(pending_remote), nullptr) {}
 
@@ -183,7 +183,8 @@ class AssociatedRemote {
   [[nodiscard]] PendingAssociatedReceiver<Interface>
   BindNewEndpointAndPassReceiver(
       scoped_refptr<base::SequencedTaskRunner> task_runner = nullptr) {
-    DCHECK(!is_bound()) << "AssociatedRemote is already bound";
+    DCHECK(!is_bound()) << "AssociatedRemote for " << Interface::Name_
+                        << " is already bound";
 
     ScopedInterfaceEndpointHandle remote_handle;
     ScopedInterfaceEndpointHandle receiver_handle;
@@ -201,7 +202,8 @@ class AssociatedRemote {
   // SequencedTaskRunner.
   void Bind(PendingAssociatedRemote<Interface> pending_remote,
             scoped_refptr<base::SequencedTaskRunner> task_runner = nullptr) {
-    DCHECK(!is_bound()) << "AssociatedRemote is already bound";
+    DCHECK(!is_bound()) << "AssociatedRemote for " << Interface::Name_
+                        << " is already bound";
 
     if (!pending_remote) {
       reset();
@@ -231,7 +233,8 @@ class AssociatedRemote {
   // endpoints in tests.
   [[nodiscard]] PendingAssociatedReceiver<Interface>
   BindNewEndpointAndPassDedicatedReceiver() {
-    DCHECK(!is_bound()) << "AssociatedReceiver is already bound";
+    DCHECK(!is_bound()) << "AssociatedRemote for " << Interface::Name_
+                        << " is already bound";
 
     PendingAssociatedReceiver<Interface> receiver =
         BindNewEndpointAndPassReceiver();

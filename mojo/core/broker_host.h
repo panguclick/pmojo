@@ -1,4 +1,4 @@
-// Copyright 2016 The Chromium Authors. All rights reserved.
+// Copyright 2016 The Chromium Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -12,7 +12,7 @@
 #include "base/process/process_handle.h"
 #include "base/strings/string_piece.h"
 #include "base/task/current_thread.h"
-#include "base/build_config.h"
+#include "build/build_config.h"
 #include "mojo/core/channel.h"
 #include "mojo/core/connection_params.h"
 #include "mojo/core/embedder/process_error_callback.h"

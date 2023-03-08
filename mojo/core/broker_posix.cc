@@ -1,4 +1,4 @@
-// Copyright 2016 The Chromium Authors. All rights reserved.
+// Copyright 2016 The Chromium Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -12,7 +12,7 @@
 
 #include "base/logging.h"
 #include "base/memory/platform_shared_memory_region.h"
-#include "base/build_config.h"
+#include "build/build_config.h"
 #include "mojo/core/broker_messages.h"
 #include "mojo/core/channel.h"
 #include "mojo/core/platform_handle_utils.h"
@@ -43,7 +43,7 @@ Channel::MessagePtr WaitForBrokerMessage(
     LOG(ERROR) << "Invalid node channel message";
     error = true;
   } else if (incoming_fds.size() != expected_num_handles) {
-    LOG(ERROR) << "Received unexpected number of handles";
+    DLOG(ERROR) << "Received unexpected number of handles";
     error = true;
   }
 

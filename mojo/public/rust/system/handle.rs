@@ -1,4 +1,4 @@
-// Copyright 2016 The Chromium Authors. All rights reserved.
+// Copyright 2016 The Chromium Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -16,7 +16,8 @@
 use crate::system::ffi;
 use crate::system::wait::*;
 
-// This full import is intentional; nearly every type in mojo_types needs to be used.
+// This full import is intentional; nearly every type in mojo_types needs to be
+// used.
 use crate::system::mojo_types::*;
 
 /// The CastHandle trait defines an interface to convert between
@@ -52,7 +53,8 @@ pub trait Handle {
         wait(self.get_native_handle(), signals)
     }
 
-    /// Gets the last known signals state of the handle. The state may change at any time during or after this call.
+    /// Gets the last known signals state of the handle. The state may change at
+    /// any time during or after this call.
     fn query_signals_state(&self) -> Result<SignalsState, MojoResult> {
         let mut state: SignalsState = Default::default();
         let r = MojoResult::from_code(unsafe {

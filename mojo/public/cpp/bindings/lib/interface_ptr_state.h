@@ -1,4 +1,4 @@
-// Copyright 2014 The Chromium Authors. All rights reserved.
+// Copyright 2014 The Chromium Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -25,6 +25,7 @@
 #include "mojo/public/cpp/bindings/interface_endpoint_client.h"
 #include "mojo/public/cpp/bindings/lib/multiplex_router.h"
 #include "mojo/public/cpp/bindings/lib/pending_remote_state.h"
+#include "mojo/public/cpp/bindings/lib/sync_method_traits.h"
 #include "mojo/public/cpp/bindings/pending_flush.h"
 #include "mojo/public/cpp/bindings/thread_safe_proxy.h"
 #include "mojo/public/cpp/system/message_pipe.h"
@@ -107,7 +108,7 @@ class COMPONENT_EXPORT(MOJO_CPP_BINDINGS) InterfacePtrStateBase {
       bool has_uninterruptable_methods,
       std::unique_ptr<MessageReceiver> payload_validator,
       const char* interface_name,
-      MessageToStableIPCHashCallback ipc_hash_callback,
+      MessageToMethodInfoCallback method_info_callback,
       MessageToMethodNameCallback method_name_callback);
 
  private:
@@ -249,6 +250,10 @@ class InterfacePtrState : public InterfacePtrStateBase {
     endpoint_client()->RaiseError();
   }
 
+  InterfaceEndpointClient* endpoint_client_for_test() {
+    return endpoint_client();
+  }
+
  private:
   void ConfigureProxyIfNecessary() {
     // The proxy has been configured.
@@ -259,10 +264,11 @@ class InterfacePtrState : public InterfacePtrStateBase {
     }
 
     if (InitializeEndpointClient(
-            Interface::PassesAssociatedKinds_, Interface::HasSyncMethods_,
+            Interface::PassesAssociatedKinds_,
+            !SyncMethodTraits<Interface>::GetOrdinals().empty(),
             Interface::HasUninterruptableMethods_,
             std::make_unique<typename Interface::ResponseValidator_>(),
-            Interface::Name_, Interface::MessageToStableIPCHash_,
+            Interface::Name_, Interface::MessageToMethodInfo_,
             Interface::MessageToMethodName_)) {
       proxy_ = std::make_unique<Proxy>(endpoint_client());
     }

@@ -1,10 +1,9 @@
-// Copyright 2016 The Chromium Authors. All rights reserved.
+// Copyright 2016 The Chromium Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 #include "mojo/core/node_controller.h"
 
-#include <algorithm>
 #include <limits>
 #include <vector>
 
@@ -14,9 +13,10 @@
 #include "base/logging.h"
 #include "base/process/process_handle.h"
 #include "base/rand_util.h"
+#include "base/ranges/algorithm.h"
 #include "base/strings/string_piece.h"
 #include "base/task/current_thread.h"
-#include "base/build_config.h"
+#include "build/build_config.h"
 #include "mojo/core/broker.h"
 #include "mojo/core/broker_host.h"
 #include "mojo/core/configuration.h"
@@ -26,6 +26,7 @@
 #include "mojo/core/user_message_impl.h"
 #include "mojo/public/cpp/platform/named_platform_channel.h"
 #include "mojo/public/cpp/platform/platform_channel.h"
+#include "third_party/abseil-cpp/absl/types/optional.h"
 
 #if BUILDFLAG(IS_WIN)
 #include <windows.h>
@@ -147,12 +148,14 @@ class ThreadDestructionObserver
 };
 
 #if !BUILDFLAG(IS_APPLE) && !BUILDFLAG(IS_NACL) && !BUILDFLAG(IS_FUCHSIA)
-ConnectionParams CreateSyncNodeConnectionParams(
+absl::optional<ConnectionParams> CreateSyncNodeConnectionParams(
     const base::Process& target_process,
     ConnectionParams connection_params,
     const ProcessErrorCallback& process_error_callback,
     Channel::HandlePolicy& handle_policy) {
   ConnectionParams node_connection_params;
+  const bool is_untrusted_process = connection_params.is_untrusted_process();
+
   // BrokerHost owns itself.
   BrokerHost* broker_host = new BrokerHost(
       target_process.IsValid() ? target_process.Duplicate() : base::Process(),
@@ -167,6 +170,7 @@ ConnectionParams CreateSyncNodeConnectionParams(
     NamedPlatformChannel named_channel(options);
     node_connection_params =
         ConnectionParams(named_channel.TakeServerEndpoint());
+    node_connection_params.set_is_untrusted_process(is_untrusted_process);
     broker_host->SendNamedChannel(named_channel.GetServerName());
     return node_connection_params;
   }
@@ -177,9 +181,11 @@ ConnectionParams CreateSyncNodeConnectionParams(
   // a sync broker message to the client.
   PlatformChannel node_channel;
   node_connection_params = ConnectionParams(node_channel.TakeLocalEndpoint());
-  bool channel_ok = broker_host->SendChannel(
-      node_channel.TakeRemoteEndpoint().TakePlatformHandle());
-  DCHECK(channel_ok);
+  node_connection_params.set_is_untrusted_process(is_untrusted_process);
+  if (!broker_host->SendChannel(
+          node_channel.TakeRemoteEndpoint().TakePlatformHandle())) {
+    return absl::nullopt;
+  }
 
   return node_connection_params;
 }
@@ -397,7 +403,7 @@ void NodeController::DeserializeRawBytesAsEventForFuzzer(
   void* payload;
   auto message = NodeChannel::CreateEventMessage(0, data.size(), &payload, 0);
   DCHECK(message);
-  std::copy(data.begin(), data.end(), static_cast<unsigned char*>(payload));
+  base::ranges::copy(data, static_cast<unsigned char*>(payload));
   DeserializeEventMessage(ports::NodeName(), std::move(message));
 }
 
@@ -424,9 +430,17 @@ void NodeController::SendBrokerClientInvitationOnIOThread(
     // |BIND_SYNC_BROKER| message from the invited client.
     node_connection_params = std::move(connection_params);
   } else {
-    node_connection_params = CreateSyncNodeConnectionParams(
+    absl::optional<ConnectionParams> params = CreateSyncNodeConnectionParams(
         target_process, std::move(connection_params), process_error_callback,
         handle_policy);
+    if (!params) {
+      if (process_error_callback) {
+        process_error_callback.Run("Unable to establish Mojo channel");
+      }
+      return;
+    }
+
+    node_connection_params = std::move(*params);
   }
 
   scoped_refptr<NodeChannel> channel = NodeChannel::Create(
@@ -937,7 +951,7 @@ void NodeController::OnAddBrokerClient(const ports::NodeName& from_node,
   }
 
   if (GetPeerChannel(client_name)) {
-    DLOG(ERROR) << "Ignoring AddBrokerClient for known client.";
+    LOG(ERROR) << "Ignoring AddBrokerClient for known client.";
     DropPeer(from_node, nullptr);
     return;
   }

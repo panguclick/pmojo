@@ -1,4 +1,4 @@
-// Copyright 2018 The Chromium Authors. All rights reserved.
+// Copyright 2018 The Chromium Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -62,6 +62,8 @@ class MOJO_CPP_SYSTEM_EXPORT OutgoingInvitation {
   ~OutgoingInvitation();
 
   OutgoingInvitation& operator=(OutgoingInvitation&& other);
+
+  void set_extra_flags(MojoSendInvitationFlags flags) { extra_flags_ = flags; }
 
   // Creates a new message pipe, attaching one end to this invitation and
   // returning the other end to the caller. The invitee can extract the
@@ -136,7 +138,8 @@ class MOJO_CPP_SYSTEM_EXPORT OutgoingInvitation {
   // connection using the same name will be disconnected.
   static ScopedMessagePipeHandle SendIsolated(
       PlatformChannelEndpoint channel_endpoint,
-      base::StringPiece connection_name = {});
+      base::StringPiece connection_name = {},
+      base::ProcessHandle target_process = base::kNullProcessHandle);
 
   // Similar to above but sends |invitation| via |server_endpoint|, which should
   // correspond to a |PlatformChannelServerEndpoint| taken from a
@@ -146,9 +149,11 @@ class MOJO_CPP_SYSTEM_EXPORT OutgoingInvitation {
   // connection using the same name will be disconnected.
   static ScopedMessagePipeHandle SendIsolated(
       PlatformChannelServerEndpoint server_endpoint,
-      base::StringPiece connection_name = {});
+      base::StringPiece connection_name = {},
+      base::ProcessHandle target_process = base::kNullProcessHandle);
 
  private:
+  MojoSendInvitationFlags extra_flags_ = MOJO_SEND_INVITATION_FLAG_NONE;
   ScopedInvitationHandle handle_;
 };
 

@@ -1,4 +1,4 @@
-// Copyright 2015 The Chromium Authors. All rights reserved.
+// Copyright 2015 The Chromium Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -22,7 +22,6 @@
 #include "mojo/public/cpp/bindings/interface_endpoint_client.h"
 #include "mojo/public/cpp/bindings/interface_endpoint_controller.h"
 #include "mojo/public/cpp/bindings/lib/may_auto_lock.h"
-#include "mojo/public/cpp/bindings/lib/message_quota_checker.h"
 #include "mojo/public/cpp/bindings/sequence_local_sync_event_watcher.h"
 
 namespace mojo {
@@ -387,11 +386,6 @@ MultiplexRouter::MultiplexRouter(
     lock_.emplace();
 
   connector_.set_incoming_receiver(&dispatcher_);
-
-  scoped_refptr<internal::MessageQuotaChecker> quota_checker =
-      internal::MessageQuotaChecker::MaybeCreate();
-  if (quota_checker)
-    connector_.SetMessageQuotaChecker(std::move(quota_checker));
 
   if (primary_interface_name) {
     control_message_handler_.SetDescription(base::JoinString(
@@ -1067,6 +1061,12 @@ bool MultiplexRouter::ProcessIncomingMessage(
 
   bool can_direct_call;
   if (message->has_flag(Message::kFlagIsSync)) {
+    if (!message->has_flag(Message::kFlagIsResponse) &&
+        !base::Contains(endpoint->client()->sync_method_ordinals(),
+                        message->name())) {
+      RaiseErrorInNonTestingMode();
+      return true;
+    }
     can_direct_call = client_call_behavior != NO_DIRECT_CLIENT_CALLS &&
                       endpoint->task_runner()->RunsTasksInCurrentSequence();
   } else {

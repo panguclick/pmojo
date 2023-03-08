@@ -1,4 +1,4 @@
-// Copyright 2016 The Chromium Authors. All rights reserved.
+// Copyright 2016 The Chromium Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -19,7 +19,7 @@
 #include "base/notreached.h"
 #include "base/synchronization/lock.h"
 #include "base/threading/thread_local.h"
-#include "base/build_config.h"
+#include "build/build_config.h"
 #include "mojo/core/ports/event.h"
 #include "mojo/core/ports/node_delegate.h"
 #include "mojo/core/ports/port_locker.h"

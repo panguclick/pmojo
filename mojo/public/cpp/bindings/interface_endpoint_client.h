@@ -1,4 +1,4 @@
-// Copyright 2015 The Chromium Authors. All rights reserved.
+// Copyright 2015 The Chromium Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -13,6 +13,7 @@
 
 #include "base/callback.h"
 #include "base/component_export.h"
+#include "base/containers/span.h"
 #include "base/dcheck_is_on.h"
 #include "base/location.h"
 #include "base/memory/raw_ptr.h"
@@ -56,11 +57,11 @@ class COMPONENT_EXPORT(MOJO_CPP_BINDINGS) InterfaceEndpointClient
   InterfaceEndpointClient(ScopedInterfaceEndpointHandle handle,
                           MessageReceiverWithResponderStatus* receiver,
                           std::unique_ptr<MessageReceiver> payload_validator,
-                          bool expect_sync_requests,
+                          base::span<const uint32_t> sync_method_ordinals,
                           scoped_refptr<base::SequencedTaskRunner> task_runner,
                           uint32_t interface_version,
                           const char* interface_name,
-                          MessageToStableIPCHashCallback ipc_hash_callback,
+                          MessageToMethodInfoCallback method_info_callback,
                           MessageToMethodNameCallback method_name_callback);
 
   InterfaceEndpointClient(const InterfaceEndpointClient&) = delete;
@@ -71,27 +72,27 @@ class COMPONENT_EXPORT(MOJO_CPP_BINDINGS) InterfaceEndpointClient
   // Sets the error handler to receive notifications when an error is
   // encountered.
   void set_connection_error_handler(base::OnceClosure error_handler) {
-    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+    CHECK(sequence_checker_.CalledOnValidSequence());
     error_handler_ = std::move(error_handler);
     error_with_reason_handler_.Reset();
   }
 
   void set_connection_error_with_reason_handler(
       ConnectionErrorWithReasonCallback error_handler) {
-    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+    CHECK(sequence_checker_.CalledOnValidSequence());
     error_with_reason_handler_ = std::move(error_handler);
     error_handler_.Reset();
   }
 
   // Returns true if an error was encountered.
   bool encountered_error() const {
-    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+    CHECK(sequence_checker_.CalledOnValidSequence());
     return encountered_error_;
   }
 
   // Returns true if this endpoint has any pending callbacks.
   bool has_pending_responders() const {
-    DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+    CHECK(sequence_checker_.CalledOnValidSequence());
     base::AutoLock lock(async_responders_lock_);
     return !async_responders_.empty() || !sync_responses_.empty();
   }
@@ -193,8 +194,8 @@ class COMPONENT_EXPORT(MOJO_CPP_BINDINGS) InterfaceEndpointClient
   void MaybeSendNotifyIdle();
 
   const char* interface_name() const { return interface_name_; }
-  MessageToStableIPCHashCallback ipc_hash_callback() const {
-    return ipc_hash_callback_;
+  MessageToMethodInfoCallback method_info_callback() const {
+    return method_info_callback_;
   }
   MessageToMethodNameCallback method_name_callback() const {
     return method_name_callback_;
@@ -220,21 +221,37 @@ class COMPONENT_EXPORT(MOJO_CPP_BINDINGS) InterfaceEndpointClient
   // The router lock must be held when calling this.
   void ForgetAsyncRequest(uint64_t request_id);
 
+  base::span<const uint32_t> sync_method_ordinals() const {
+    return sync_method_ordinals_;
+  }
+
  private:
-  // Maps from the id of a response to the MessageReceiver that handles the
-  // response.
-  using AsyncResponderMap =
-      std::map<uint64_t, std::unique_ptr<MessageReceiver>>;
+  struct PendingAsyncResponse {
+   public:
+    PendingAsyncResponse(uint32_t request_message_name,
+                         std::unique_ptr<MessageReceiver> responder);
+    PendingAsyncResponse(PendingAsyncResponse&&);
+    PendingAsyncResponse(const PendingAsyncResponse&) = delete;
+    PendingAsyncResponse& operator=(PendingAsyncResponse&&);
+    PendingAsyncResponse& operator=(const PendingAsyncResponse&) = delete;
+    ~PendingAsyncResponse();
+
+    uint32_t request_message_name;
+    std::unique_ptr<MessageReceiver> responder;
+  };
+
+  using AsyncResponderMap = std::map<uint64_t, PendingAsyncResponse>;
 
   struct SyncResponseInfo {
    public:
-    explicit SyncResponseInfo(bool* in_response_received);
+    SyncResponseInfo(uint32_t request_message_name, bool* in_response_received);
 
     SyncResponseInfo(const SyncResponseInfo&) = delete;
     SyncResponseInfo& operator=(const SyncResponseInfo&) = delete;
 
     ~SyncResponseInfo();
 
+    uint32_t request_message_name;
     Message response;
 
     // Points to a stack-allocated variable.
@@ -269,7 +286,7 @@ class COMPONENT_EXPORT(MOJO_CPP_BINDINGS) InterfaceEndpointClient
 
   bool HandleValidatedMessage(Message* message);
 
-  const bool expect_sync_requests_ = false;
+  const base::span<const uint32_t> sync_method_ordinals_;
 
   // The callback to invoke when our peer endpoint sends us NotifyIdle and we
   // have no outstanding unacked messages. If null, no callback has been set and
@@ -327,7 +344,7 @@ class COMPONENT_EXPORT(MOJO_CPP_BINDINGS) InterfaceEndpointClient
   internal::ControlMessageProxy control_message_proxy_{this};
   internal::ControlMessageHandler control_message_handler_;
   const char* interface_name_;
-  const MessageToStableIPCHashCallback ipc_hash_callback_;
+  const MessageToMethodInfoCallback method_info_callback_;
   const MessageToMethodNameCallback method_name_callback_;
 
 #if DCHECK_IS_ON()
@@ -337,7 +354,9 @@ class COMPONENT_EXPORT(MOJO_CPP_BINDINGS) InterfaceEndpointClient
   base::Location next_call_location_;
 #endif
 
-  SEQUENCE_CHECKER(sequence_checker_);
+  // We use SequenceCheckerImpl directly, to assert some sequence checks even in
+  // release builds. See https://crbug.com/1325096.
+  base::SequenceCheckerImpl sequence_checker_;
 
   base::WeakPtrFactory<InterfaceEndpointClient> weak_ptr_factory_{this};
 };

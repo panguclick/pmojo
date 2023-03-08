@@ -1,4 +1,4 @@
-// Copyright 2018 The Chromium Authors. All rights reserved.
+// Copyright 2018 The Chromium Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -7,7 +7,7 @@
 #include <tuple>
 
 #include "base/numerics/safe_conversions.h"
-#include "base/build_config.h"
+#include "build/build_config.h"
 #include "mojo/public/c/system/invitation.h"
 #include "mojo/public/c/system/platform_handle.h"
 #include "mojo/public/cpp/system/platform_handle.h"
@@ -161,7 +161,7 @@ void OutgoingInvitation::Send(OutgoingInvitation invitation,
   SendInvitation(std::move(invitation.handle_), target_process,
                  channel_endpoint.TakePlatformHandle(),
                  MOJO_INVITATION_TRANSPORT_TYPE_CHANNEL,
-                 MOJO_SEND_INVITATION_FLAG_NONE, error_callback, "");
+                 invitation.extra_flags_, error_callback, "");
 }
 
 // static
@@ -172,7 +172,7 @@ void OutgoingInvitation::Send(OutgoingInvitation invitation,
   SendInvitation(std::move(invitation.handle_), target_process,
                  server_endpoint.TakePlatformHandle(),
                  MOJO_INVITATION_TRANSPORT_TYPE_CHANNEL_SERVER,
-                 MOJO_SEND_INVITATION_FLAG_NONE, error_callback, "");
+                 invitation.extra_flags_, error_callback, "");
 }
 
 // static
@@ -183,36 +183,38 @@ void OutgoingInvitation::SendAsync(OutgoingInvitation invitation,
   SendInvitation(std::move(invitation.handle_), target_process,
                  channel_endpoint.TakePlatformHandle(),
                  MOJO_INVITATION_TRANSPORT_TYPE_CHANNEL_ASYNC,
-                 MOJO_SEND_INVITATION_FLAG_NONE, error_callback, "");
+                 invitation.extra_flags_, error_callback, "");
 }
 
 // static
 ScopedMessagePipeHandle OutgoingInvitation::SendIsolated(
     PlatformChannelEndpoint channel_endpoint,
-    base::StringPiece connection_name) {
+    base::StringPiece connection_name,
+    base::ProcessHandle target_process) {
   mojo::OutgoingInvitation invitation;
   ScopedMessagePipeHandle pipe =
       invitation.AttachMessagePipe(kIsolatedPipeName);
-  SendInvitation(std::move(invitation.handle_), base::kNullProcessHandle,
+  SendInvitation(std::move(invitation.handle_), target_process,
                  channel_endpoint.TakePlatformHandle(),
                  MOJO_INVITATION_TRANSPORT_TYPE_CHANNEL,
-                 MOJO_SEND_INVITATION_FLAG_ISOLATED, ProcessErrorCallback(),
-                 connection_name);
+                 MOJO_SEND_INVITATION_FLAG_ISOLATED | invitation.extra_flags_,
+                 ProcessErrorCallback(), connection_name);
   return pipe;
 }
 
 // static
 ScopedMessagePipeHandle OutgoingInvitation::SendIsolated(
     PlatformChannelServerEndpoint server_endpoint,
-    base::StringPiece connection_name) {
+    base::StringPiece connection_name,
+    base::ProcessHandle target_process) {
   mojo::OutgoingInvitation invitation;
   ScopedMessagePipeHandle pipe =
       invitation.AttachMessagePipe(kIsolatedPipeName);
-  SendInvitation(std::move(invitation.handle_), base::kNullProcessHandle,
+  SendInvitation(std::move(invitation.handle_), target_process,
                  server_endpoint.TakePlatformHandle(),
                  MOJO_INVITATION_TRANSPORT_TYPE_CHANNEL_SERVER,
-                 MOJO_SEND_INVITATION_FLAG_ISOLATED, ProcessErrorCallback(),
-                 connection_name);
+                 MOJO_SEND_INVITATION_FLAG_ISOLATED | invitation.extra_flags_,
+                 ProcessErrorCallback(), connection_name);
   return pipe;
 }
 

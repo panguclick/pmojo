@@ -1,10 +1,10 @@
-// Copyright 2018 The Chromium Authors. All rights reserved.
+// Copyright 2018 The Chromium Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 #include "base/files/scoped_temp_dir.h"
 #include "base/sync_socket.h"
-#include "base/build_config.h"
+#include "build/build_config.h"
 #include "mojo/public/cpp/base/file_mojom_traits.h"
 #include "mojo/public/cpp/base/read_only_file_mojom_traits.h"
 #include "mojo/public/cpp/test_support/test_utils.h"

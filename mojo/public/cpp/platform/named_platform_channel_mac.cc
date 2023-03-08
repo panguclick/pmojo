@@ -1,4 +1,4 @@
-// Copyright 2019 The Chromium Authors. All rights reserved.
+// Copyright 2019 The Chromium Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -66,7 +66,7 @@ PlatformChannelEndpoint NamedPlatformChannel::CreateClientEndpoint(
       bootstrap_port, options.server_name.c_str(),
       base::mac::ScopedMachSendRight::Receiver(send_right).get());
   if (kr != KERN_SUCCESS) {
-    BOOTSTRAP_LOG(ERROR, kr) << "bootstrap_look_up " << options.server_name;
+    BOOTSTRAP_VLOG(1, kr) << "bootstrap_look_up " << options.server_name;
     return PlatformChannelEndpoint();
   }
 

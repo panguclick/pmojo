@@ -1,4 +1,4 @@
-// Copyright 2016 The Chromium Authors. All rights reserved.
+// Copyright 2016 The Chromium Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -14,7 +14,8 @@
 #include "base/files/scoped_file.h"
 #include "base/memory/unsafe_shared_memory_region.h"
 #include "base/process/process_handle.h"
-#include "base/build_config.h"
+#include "base/ranges/algorithm.h"
+#include "build/build_config.h"
 #include "mojo/core/test/mojo_test_base.h"
 #include "mojo/public/c/system/platform_handle.h"
 #include "mojo/public/cpp/system/message_pipe.h"
@@ -111,7 +112,8 @@ DEFINE_TEST_CLIENT_TEST_WITH_PIPE(ReadPlatformFile, PlatformWrapperTest, h) {
   std::vector<char> data(message.size());
   EXPECT_EQ(file.ReadAtCurrentPos(data.data(), static_cast<int>(data.size())),
             static_cast<int>(data.size()));
-  EXPECT_TRUE(std::equal(message.begin(), message.end(), data.begin()));
+  EXPECT_TRUE(base::ranges::equal(message, data));
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(h));
 }
 
 TEST_F(PlatformWrapperTest, WrapPlatformSharedMemoryRegion) {
@@ -229,6 +231,7 @@ DEFINE_TEST_CLIENT_TEST_WITH_PIPE(ReadPlatformSharedBuffer,
       reinterpret_cast<MojoSharedBufferGuid*>(guid_bytes.data());
   EXPECT_EQ(expected_guid->high, mojo_guid.high);
   EXPECT_EQ(expected_guid->low, mojo_guid.low);
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(h));
 }
 
 TEST_F(PlatformWrapperTest, InvalidHandle) {
