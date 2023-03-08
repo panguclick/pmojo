@@ -14,7 +14,5 @@ set(CMAKE_CXX_STANDARD 17)
 set(ABSL_BUILD_TESTING OFF)
 set(ABSL_USE_GOOGLETEST_HEAD OFF)
 
-add_subdirectory(third_party/abseil-cpp)
-
 add_subdirectory(base)
 
