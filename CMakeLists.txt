@@ -1,7 +1,7 @@
 #
 # Copyright 2022 The pmojo Authors.
 #
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.11)
 
 project(pmojo LANGUAGES CXX)
 
@@ -15,4 +15,5 @@ set(ABSL_BUILD_TESTING OFF)
 set(ABSL_USE_GOOGLETEST_HEAD OFF)
 
 add_subdirectory(base)
+add_subdirectory(mojo)
 
